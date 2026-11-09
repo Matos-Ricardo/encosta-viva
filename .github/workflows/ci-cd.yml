@@ -63,7 +63,7 @@ jobs:
 
       - name: Trivy - vulnerabilidades da imagem
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/work -w /work aquasec/trivy:latest \
             image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$IMAGE:${{ github.sha }}"
 
       - name: Trivy - configuração (Dockerfile e Terraform)
