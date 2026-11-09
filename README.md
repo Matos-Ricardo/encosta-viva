@@ -1,70 +1,188 @@
 # Encosta Viva
 
-Alerta antecipado de deslizamento para comunidades que vivem em áreas de risco.
-Entrega de **Secure DevOps Tools & Cloud Computing** · FIAP Global Solution 2026.2 · CitizenTech · 4ES.
+**Sistema de alerta antecipado de deslizamentos para comunidades que vivem em áreas de risco.**
+
+Projeto desenvolvido para a disciplina **Secure DevOps Tools & Cloud Computing**, FIAP Global Solution 2026.2 — CitizenTech — 4ES.
 
 ## Integrantes
 
 | Nome completo | RM |
 |---|---|
 | Ricardo Matos | 95906 |
-| (preencher) | (preencher) |
-| (preencher) | (preencher) |
+| Julio Zampieri | 98772 |
+| João Dias | 99092 |
 
 ## Ficha Técnica do MVP
 
 | Campo | Descrição |
 |---|---|
 | Nome do produto | Encosta Viva |
-| Cidadão e território | Moradores de setores de risco alto e muito alto (R3/R4) em encostas urbanas (periferias da Grande SP, Litoral Norte, Petrópolis) e o agente da Defesa Civil municipal que monitora essas áreas. |
-| Problema, em uma frase | Quem mora em encosta recebe alertas genéricos por município, tarde demais e sem saber o que fazer, enquanto a Defesa Civil não tem olhos no terreno entre uma vistoria e outra. |
-| Proposta de valor | Alerta por setor de risco (não por cidade), combinando chuva, umidade e movimento do solo, com orientação clara em linguagem simples e funcionando mesmo sem internet no local. |
-| Arquitetura: componentes | Robô sentinela (ESP32) · API FastAPI em container · Azure Container Apps · pipeline GitHub Actions (DevSecOps) · Prometheus + Grafana · Terraform |
-| Fontes de dados | Leituras de umidade do solo do robô sentinela; Open-Meteo (chuva); CEMADEN; IBGE |
-| Modelos de IA utilizados | Assistente (LLM local) que gera a frase de orientação, chamado pela API quando o nível muda |
-| URL do MVP e repositório | MVP: (colar a URL do output do Terraform) · Repositório: (colar o link do GitHub) |
-| Indicadores de impacto | Minutos de antecedência do alerta · leituras recebidas por minuto · uptime da API · falsos alarmes por mês |
-| ODS conectados | 11 (meta 11.5) · 13 (meta 13.1) · 9 · 10 · 3 |
+| Público-alvo | Moradores de áreas de risco de deslizamento e agentes da Defesa Civil municipal. |
+| Problema | Alertas genéricos por município podem não oferecer informações suficientemente específicas sobre o risco enfrentado por cada comunidade. |
+| Proposta de valor | Centralizar informações de monitoramento e disponibilizar alertas por setor de risco, com orientações claras para a população. |
+| API | Python, FastAPI e Uvicorn. |
+| Infraestrutura | Azure Container Apps e Azure Log Analytics. |
+| Containerização | Docker e Docker Compose. |
+| Infraestrutura como código | Terraform. |
+| CI/CD e segurança | GitHub Actions, Gitleaks, Semgrep e Trivy. |
+| Observabilidade | Prometheus e Grafana. |
+| URL do MVP | https://encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io |
+| Repositório | https://github.com/Matos-Ricardo/encosta-viva |
+| Indicadores de impacto | Antecedência dos alertas, quantidade de leituras recebidas, disponibilidade da API e ocorrência de falsos alarmes. |
+| ODS relacionados | ODS 3, 9, 10, 11 e 13. |
 
-## O que tem neste repositório
+## Arquitetura da solução
 
+O Encosta Viva utiliza uma arquitetura baseada em serviços containerizados e infraestrutura em nuvem.
+
+Principais componentes:
+
+- **API FastAPI:** recebe e disponibiliza informações relacionadas ao monitoramento.
+- **Docker:** empacota a aplicação em um container.
+- **Azure Container Apps:** hospeda a aplicação na nuvem.
+- **Terraform:** provisiona os recursos de infraestrutura.
+- **GitHub Actions:** automatiza testes, verificações de segurança, publicação da imagem e deploy.
+- **Prometheus:** coleta métricas da aplicação.
+- **Grafana:** disponibiliza painéis para visualização das métricas.
+- **Azure Log Analytics:** centraliza registros da infraestrutura.
+
+## Estrutura do repositório
+
+```text
+app/
+  API FastAPI e testes
+
+Dockerfile
+  Construção da imagem da aplicação
+
+docker-compose.yml
+  Inicialização dos serviços locais
+
+monitoring/
+  Configuração do Prometheus
+  Regras de alertas
+  Dashboard Grafana
+
+infra/
+  Arquivos Terraform
+
+.github/workflows/
+  Pipeline CI/CD
+
+docs/
+  Documentação do projeto
 ```
-app/                  API FastAPI (main.py) + testes (pytest)
-Dockerfile            multi-stage, imagem slim, usuário não root, sem segredo
-docker-compose.yml    api + prometheus + grafana
-monitoring/           prometheus.yml, alerts.yml e dashboard do Grafana (4 sinais de ouro)
-infra/                Terraform (Azure Container Apps)
-.github/workflows/    pipeline: pytest -> Gitleaks -> Semgrep -> Trivy -> GHCR -> deploy
-docs/                 ARQUITETURA.md e PUBLICAR.md (passo a passo)
+
+## Como executar localmente
+
+Pré-requisitos:
+
+- Docker
+- Docker Compose
+- Git
+
+No terminal, execute:
+
+```bash
+docker compose up --build -d
 ```
 
-## Rodar localmente
+Configure previamente as variáveis de ambiente necessárias no arquivo `.env`, utilizando o `.env.example` como referência.
 
-```powershell
-Copy-Item .env.example .env      # preencha API_KEY e GRAFANA_PASSWORD no .env
-docker compose up --build
-```
+### Serviços disponíveis
 
 | Serviço | Endereço |
 |---|---|
-| API | http://localhost:8000 (docs em `/docs`) |
-| Prometheus | http://localhost:9090 (alertas em `/alerts`) |
-| Grafana | http://localhost:3000 (usuário `admin`, senha = `GRAFANA_PASSWORD`) |
+| API | http://localhost:8000 |
+| Documentação da API | http://localhost:8000/docs |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
 
-## Contrato da API (usado pelo robô e pelo app)
+## Contrato da API
 
-| Método | Rota | O que faz |
+| Método | Rota | Descrição |
 |---|---|---|
-| GET | `/saude` | health check |
-| POST | `/leituras` | recebe `{"setor_id","umidade_pct","nivel"}` com o header `X-API-Key`; devolve `{"frase"}` |
-| GET | `/setores/{id}/risco` | último nível do setor e o porquê |
-| GET | `/metrics` | métricas Prometheus |
+| GET | `/saude` | Verifica a disponibilidade da API. |
+| POST | `/leituras` | Recebe informações de leitura do monitoramento. |
+| GET | `/setores/{id}/risco` | Consulta o nível de risco de um setor. |
+| GET | `/metrics` | Disponibiliza métricas para o Prometheus. |
 
-`nivel` aceita: `NORMAL`, `ATENCAO`, `ALERTA`, `ERRO`.
+A rota `/leituras` utiliza autenticação por chave de API no cabeçalho `X-API-Key`.
 
-## Segurança e LGPD
+Níveis previstos:
 
-- Nenhum segredo no código ou na imagem: a chave da API vem de variável de ambiente (Secret do Container App).
-- `terraform.tfstate`, `*.tfvars` e `.env` estão no `.gitignore`.
-- A API não guarda dado pessoal: só setor, umidade e nível.
-- A IA não decide evacuação: o nível vem da regra do robô e quem decide remover pessoas é a Defesa Civil.
+- `NORMAL`
+- `ATENCAO`
+- `ALERTA`
+- `ERRO`
+
+## Segurança e DevSecOps
+
+O projeto utiliza práticas de segurança durante o desenvolvimento e a publicação:
+
+- Imagem Docker baseada em imagem slim e construção multi-stage.
+- Execução da aplicação com usuário não-root.
+- Segredos fornecidos por variáveis de ambiente e mecanismos de secrets.
+- Gitleaks para identificação de segredos expostos.
+- Semgrep para análise estática do código.
+- Trivy para verificação de vulnerabilidades.
+- GitHub Actions para automatização do processo de integração e entrega.
+- Terraform para gerenciamento da infraestrutura.
+
+Arquivos sensíveis, como `.env`, `.tfvars` e arquivos de estado do Terraform, são excluídos do versionamento por meio do `.gitignore`.
+
+## Monitoramento e observabilidade
+
+O monitoramento utiliza Prometheus e Grafana.
+
+As métricas acompanhadas incluem os quatro sinais de ouro:
+
+1. **Latência:** tempo de resposta das requisições.
+2. **Tráfego:** quantidade de requisições recebidas.
+3. **Erros:** proporção de respostas com falha.
+4. **Saturação:** utilização de CPU e memória.
+
+O Prometheus coleta métricas da API local e da aplicação publicada no Azure.
+
+O projeto também possui regras de alerta para ausência de leituras e aumento de respostas HTTP 5xx.
+
+## Privacidade e LGPD
+
+O projeto deve observar os princípios da Lei Geral de Proteção de Dados (LGPD).
+
+- Coletar somente informações necessárias para o monitoramento.
+- Evitar o armazenamento de dados pessoais desnecessários.
+- Proteger credenciais e informações de acesso.
+- Restringir o acesso aos recursos de infraestrutura.
+- Definir políticas de retenção e tratamento dos registros.
+
+A aplicação não deve ser utilizada como substituta dos procedimentos oficiais da Defesa Civil.
+
+## Responsabilidade compartilhada
+
+| Responsabilidade | Projeto | Provedor Azure |
+|---|---|---|
+| Código da aplicação | Responsável | — |
+| Configuração do container | Responsável | Infraestrutura de execução |
+| Gerenciamento de credenciais | Responsável | Recursos de armazenamento de secrets |
+| Segurança do código | Responsável | — |
+| Segurança física dos datacenters | — | Responsável |
+| Disponibilidade da infraestrutura de nuvem | — | Responsável conforme serviço contratado |
+| Monitoramento da aplicação | Responsável | Ferramentas de infraestrutura disponíveis |
+
+## Estimativa de custos
+
+A infraestrutura utiliza serviços Azure, incluindo Azure Container Apps e Log Analytics.
+
+Os custos dependem do consumo de CPU, memória, armazenamento, registros e tráfego.
+
+A estimativa financeira detalhada deve considerar a configuração efetivamente provisionada, a região `brazilsouth` e os preços vigentes no momento da entrega.
+
+## Links do projeto
+
+- **Aplicação:** https://encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io
+- **Repositório GitHub:** https://github.com/Matos-Ricardo/encosta-viva
+
+---
+
+Projeto acadêmico desenvolvido para a FIAP — Global Solution 2026.2.
