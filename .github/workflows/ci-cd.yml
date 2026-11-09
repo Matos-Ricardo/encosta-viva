@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Semgrep (SAST)
-        run: semgrep scan --config auto --error
+        run: semgrep scan --config p/python --config p/dockerfile --error
 
   imagem-e-deploy:
     needs: [testes, gitleaks, semgrep]
