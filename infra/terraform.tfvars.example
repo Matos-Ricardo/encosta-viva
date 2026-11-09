@@ -1,0 +1,6 @@
+# Copie para terraform.tfvars (está no .gitignore) e preencha. NUNCA commite o .tfvars.
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "brazilsouth"
+image           = "ghcr.io/SEU-USUARIO/SEU-REPOSITORIO:latest"
+# api_key: defina uma chave longa e aleatória aqui no terraform.tfvars
+api_key         = ""

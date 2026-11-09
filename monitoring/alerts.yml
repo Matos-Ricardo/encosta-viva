@@ -1,0 +1,22 @@
+groups:
+  - name: encosta-viva
+    rules:
+      # Alerta de exemplo da disciplina: o robô parou de enviar leituras.
+      - alert: SemLeiturasDoSensor
+        expr: increase(leituras_total{job=~"api-.*"}[5m]) == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nenhuma leitura de sensor recebida nos últimos 5 minutos ({{ $labels.job }})"
+
+      # Erros 5xx acima de 5% das requisições.
+      - alert: TaxaDeErros5xxAlta
+        expr: >
+          sum by (job) (rate(http_requests_total{job=~"api-.*", status="5xx"}[5m]))
+          / sum by (job) (rate(http_requests_total{job=~"api-.*"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mais de 5% de respostas 5xx ({{ $labels.job }})"

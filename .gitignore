@@ -1,0 +1,14 @@
+# segredos e estado do Terraform: NUNCA no repositório
+.env
+*.tfvars
+!*.tfvars.example
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

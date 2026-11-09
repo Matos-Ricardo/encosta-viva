@@ -1,0 +1,10 @@
+.git
+.github
+.env
+infra
+monitoring
+docs
+**/__pycache__
+*.md
+app/test_main.py
+app/requirements-dev.txt
