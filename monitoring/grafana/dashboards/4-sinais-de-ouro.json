@@ -2,34 +2,53 @@
   "title": "Encosta Viva - 4 sinais de ouro",
   "uid": "encosta-4-sinais",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "10s",
-  "time": { "from": "now-30m", "to": "now" },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "panels": [
     {
       "id": 1,
       "type": "timeseries",
-      "title": "1. Latência p95 (segundos)",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "title": "1. Lat\u00eancia p95 (segundos)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "refId": "A",
           "legendFormat": "p95",
-          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_highr_seconds_bucket[5m])))"
+          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_seconds_bucket[5m])))"
         }
       ]
     },
     {
       "id": 2,
       "type": "timeseries",
-      "title": "2. Tráfego (requisições/min e leituras do sensor/min)",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "title": "2. Tr\u00e1fego (requisi\u00e7\u00f5es/min e leituras do sensor/min)",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "refId": "A",
-          "legendFormat": "requisições/min {{job}}",
+          "legendFormat": "requisi\u00e7\u00f5es/min {{job}}",
           "expr": "sum by (job) (rate(http_requests_total[1m])) * 60"
         },
         {
@@ -43,9 +62,23 @@
       "id": 3,
       "type": "timeseries",
       "title": "3. Erros (taxa de respostas 5xx)",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -57,9 +90,17 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "4. Saturação (CPU em cores e memória)",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "title": "4. Satura\u00e7\u00e3o (CPU em cores e mem\u00f3ria)",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "refId": "A",
@@ -68,7 +109,7 @@
         },
         {
           "refId": "B",
-          "legendFormat": "memória (bytes) {{job}}",
+          "legendFormat": "mem\u00f3ria (bytes) {{job}}",
           "expr": "process_resident_memory_bytes"
         }
       ]

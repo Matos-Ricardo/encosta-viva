@@ -16,4 +16,4 @@ scrape_configs:
     scheme: https
     metrics_path: /metrics
     static_configs:
-      - targets: ["SEU-APP.REGIAO.azurecontainerapps.io"]
+      - targets: ["encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io"]
