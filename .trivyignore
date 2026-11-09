@@ -1,3 +1,5 @@
 # Risco aceito e documentado: CVE-2026-54283 (starlette, limites de request.form()).
 # A API recebe so JSON e nao usa request.form(). Reavaliar quando a correcao puder ser instalada.
 CVE-2026-54283
+# CVE-2026-48818 (starlette StaticFiles/UNC): a API nao usa StaticFiles e roda em container Linux.
+CVE-2026-48818
