@@ -9,8 +9,9 @@ terraform {
     }
   }
 
-  # State LOCAL de propósito.
-  # O arquivo terraform.tfstate deve permanecer no .gitignore.
+  backend "local" {
+    path = "/workspaces/encosta-viva-state/terraform.tfstate"
+  }
 }
 
 provider "azurerm" {

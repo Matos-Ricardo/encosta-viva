@@ -1,6 +1,10 @@
 apiVersion: 1
 providers:
   - name: encosta-viva
+    orgId: 1
+    folder: Encosta Viva
     type: file
+    disableDeletion: false
+    editable: true
     options:
       path: /var/lib/grafana/dashboards

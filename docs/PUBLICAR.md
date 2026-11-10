@@ -1,125 +1,290 @@
-# Passo a passo para publicar (PowerShell)
+# Guia de publicação — Encosta Viva
 
-Pré-requisitos instalados: Git, Docker Desktop, Terraform e Azure CLI. Contas: GitHub e Azure.
+Este documento apresenta a configuração, execução, publicação e monitoramento do projeto Encosta Viva, desenvolvido para a FIAP Global Solution 2026.2.
 
-## 1. Subir o código para um repositório público no GitHub
+## 1. Pré-requisitos
 
-Crie um repositório público vazio no GitHub e, na pasta do projeto:
+Ferramentas necessárias:
 
-```powershell
-git init -b main
-git add .
-git commit -m "Encosta Viva - versão inicial"
-git remote add origin https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git
-git push -u origin main
+- Git
+- Docker Desktop ou Docker Engine
+- Terraform
+- Azure CLI
+- Conta no GitHub
+- Conta na Microsoft Azure
+
+Repositório: https://github.com/Matos-Ricardo/encosta-viva
+
+## 2. Publicação da imagem no GitHub Container Registry (GHCR)
+
+O projeto utiliza o GitHub Container Registry para armazenar a imagem Docker.
+
+O workflow do GitHub Actions constrói e publica automaticamente a imagem quando ocorre um push na branch `main`.
+
+O nome da imagem segue o padrão:
+
+```text
+ghcr.io/matos-ricardo/encosta-viva:latest
 ```
 
-O pipeline roda sozinho. Nesta primeira vez ele para antes do deploy (ainda não configuramos a Azure) e publica a imagem no GHCR.
+A imagem deve estar com visibilidade pública para permitir que o Azure Container Apps faça o download sem autenticação privada.
 
-## 2. Tornar a imagem pública no GHCR
+Para conferir a visibilidade:
 
-GitHub, seu perfil, aba **Packages**, abra o pacote, **Package settings**, **Change visibility**, **Public**.
-Anote o nome da imagem, tudo em minúsculas: `ghcr.io/seu-usuario/seu-repositorio:latest`.
+1. Acesse o perfil do GitHub.
+2. Entre na aba Packages.
+3. Abra o pacote `encosta-viva`.
+4. Acesse Package settings.
+5. Confira se a visibilidade está como Public.
 
-## 3. Testar local (print para o PDF)
+## 3. Executar o projeto localmente
+
+Na raiz do repositório, copie o arquivo de exemplo das variáveis de ambiente:
 
 ```powershell
-Copy-Item .env.example .env     # edite o .env: API_KEY e GRAFANA_PASSWORD
-docker compose up --build
+Copy-Item .env.example .env
+```
+
+Edite o `.env` e configure os valores necessários, como `API_KEY` e `GRAFANA_PASSWORD`.
+
+Não compartilhe nem versione o arquivo `.env`.
+
+Inicie os serviços:
+
+```bash
+docker compose up --build -d
+```
+
+Confira os containers:
+
+```bash
+docker compose ps
+```
+
+Teste a saúde da API:
+
+```powershell
 Invoke-RestMethod http://localhost:8000/saude
-Invoke-RestMethod -Method Post -Uri http://localhost:8000/leituras -Headers @{"X-API-Key"="SUA-CHAVE"} -ContentType "application/json" -Body '{"setor_id":"vila-sahy","umidade_pct":82,"nivel":"ALERTA"}'
 ```
 
-## 4. Criar a infraestrutura na Azure com Terraform
+Envie uma leitura de teste:
 
 ```powershell
-az login
-az account show --query id -o tsv                      # copie o ID da assinatura
-az provider register --namespace Microsoft.App
-az provider register --namespace Microsoft.OperationalInsights
+Invoke-RestMethod -Method Post -Uri "http://localhost:8000/leituras" -Headers @{"X-API-Key"="SUA-CHAVE"} -ContentType "application/json" -Body '{"setor_id":"vila-sahy","umidade_pct":82,"nivel":"ALERTA"}'
+```
 
+Substitua `SUA-CHAVE` pela chave configurada no ambiente.
+
+## 4. Infraestrutura na Azure com Terraform
+
+A infraestrutura do Encosta Viva é provisionada na Microsoft Azure utilizando Terraform.
+
+### Recursos provisionados
+
+- Azure Resource Group: `rg-encosta-viva`
+- Azure Container Apps Environment
+- Azure Container App: `encosta-api`
+- Log Analytics Workspace
+
+Região utilizada: `brazilsouth`.
+
+### Configuração do projeto atual
+
+O estado do Terraform e as variáveis sensíveis ficam fora do repositório, em diretório protegido:
+
+- Estado: `/workspaces/encosta-viva-state/terraform.tfstate`
+- Variáveis: `/workspaces/encosta-viva-state/terraform.tfvars`
+- Backend local configurado em `infra/main.tf`.
+
+O arquivo `infra/terraform.tfvars.example` contém apenas valores ilustrativos e serve como referência para uma nova instalação.
+
+**Importante:** não execute `terraform init -migrate-state` nem `terraform apply` na infraestrutura já existente sem revisar previamente o estado e o plano. O estado atual deve ser preservado.
+
+Para consultar os recursos registrados no estado:
+
+```bash
 cd infra
-Copy-Item terraform.tfvars.example terraform.tfvars    # edite: subscription_id, image, api_key
-terraform init
-terraform plan
-terraform apply
+terraform state list
 ```
 
-Ao final, o Terraform mostra `url = "https://encosta-api...azurecontainerapps.io"`. Teste `<url>/saude` no navegador.
-Se der erro de região ou política, troque `location` no `terraform.tfvars` por outra região permitida na sua assinatura.
+Para consultar a configuração da infraestrutura:
 
-## 5. Ligar o deploy automático
-
-Crie a conta de serviço que o GitHub usa para atualizar o Container App (troque `ID-DA-ASSINATURA`):
-
-```powershell
-az ad sp create-for-rbac --name gh-encosta-deploy --role contributor --scopes /subscriptions/ID-DA-ASSINATURA/resourceGroups/rg-encosta-viva --sdk-auth
+```bash
 ```
 
-No GitHub: **Settings, Secrets and variables, Actions**:
+Em uma nova instalação, será necessário configurar uma assinatura Azure, preencher as variáveis sensíveis fora do repositório e inicializar o Terraform com um backend adequado ao novo ambiente.
 
-- Secret `AZURE_CREDENTIALS`: cole o JSON inteiro que o comando mostrou.
-- Variable `DEPLOY_ENABLED`: `true`.
+O caminho local configurado atualmente depende do Codespace onde o projeto foi desenvolvido e não deve ser considerado um caminho universal.
 
-Faça qualquer commit em `main` (ou rode o workflow de novo). O último passo do pipeline troca a imagem do Container App.
+### Teste da API publicada
 
-> Se a sua conta da faculdade bloquear a criação do service principal, avise para trocarmos o deploy por outra forma.
+A API está disponível em:
+
+https://encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io
+
+Teste o endpoint:
+
+```text
+https://encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io/saude
+```
+
+A resposta esperada é:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+## 5. Deploy automático pela GitHub Actions
+
+O deploy automático do Encosta Viva está configurado no workflow:
+
+```text
+.github/workflows/
+```
+
+O processo é executado em eventos de push na branch `main` e possui as seguintes etapas:
+
+1. Testes automatizados com Pytest.
+2. Verificação de segredos com Gitleaks.
+3. Análise estática de código com Semgrep.
+4. Construção da imagem Docker.
+5. Análise de vulnerabilidades da imagem com Trivy.
+6. Análise de configurações do Dockerfile e Terraform com Trivy.
+7. Publicação da imagem no GitHub Container Registry (GHCR).
+8. Atualização da imagem do Azure Container App.
+
+O deploy na Azure depende de duas configurações no GitHub:
+
+- Secret `AZURE_CREDENTIALS`: credenciais da aplicação de serviço autorizada na Azure.
+- Variable `DEPLOY_ENABLED`: deve estar definida como `true`.
+
+Essas configurações ficam em:
+
+**GitHub → Settings → Secrets and variables → Actions.**
+
+O deploy é realizado somente em eventos de push na branch `main`, quando as verificações anteriores são aprovadas e as configurações necessárias estão habilitadas.
+
+O Container App atualizado utiliza o nome `encosta-api`, no Resource Group `rg-encosta-viva`.
+
+### Evidências de segurança
+
+O projeto possui execuções do pipeline que demonstram tanto o bloqueio de vulnerabilidades quanto a execução corrigida.
+
+As evidências podem ser consultadas na aba Actions do repositório.
 
 ## 6. Prometheus e Grafana apontando para a nuvem
 
-Edite `monitoring/prometheus.yml`: no job `api-nuvem`, troque o alvo pelo host da URL do Terraform (sem `https://`). Depois:
+O projeto utiliza Prometheus para coleta de métricas e Grafana para visualização e monitoramento.
 
-```powershell
+O arquivo de configuração do Prometheus está em:
+
+```text
+monitoring/prometheus.yml
+```
+
+O monitoramento contempla dois alvos:
+
+- API local: `api:8000`
+- API publicada: Azure Container Apps.
+
+Para iniciar os serviços de monitoramento:
+
+```bash
 docker compose up -d
 ```
 
-- Grafana: http://localhost:3000 (dashboard "Encosta Viva - 4 sinais de ouro" já vem pronto)
-- Prometheus: http://localhost:9090/alerts
+Endereços locais:
 
-Mande leituras para a URL pública (o robô ou o `Invoke-RestMethod` com a URL da nuvem) para o dashboard ter dados.
+- Grafana: http://localhost:3000
+- Prometheus: http://localhost:9090
+- Prometheus Alerts: http://localhost:9090/alerts
 
-**Alerta disparado:** pare de enviar leituras por cerca de 6 minutos. O alerta `SemLeiturasDoSensor` vai para **FIRING** em
-http://localhost:9090/alerts (tire o print). Volte a enviar leituras e ele resolve.
+O Grafana utiliza o datasource Prometheus e possui um dashboard destinado ao acompanhamento dos quatro sinais de monitoramento.
 
-## 7. Demonstração do pipeline barrado e corrigido
+### Teste de envio de leituras
 
-**Gitleaks (segredo vazado):**
+Para gerar métricas e alimentar o monitoramento, envie leituras para a API publicada utilizando o endpoint `/leituras` e a chave de autenticação configurada.
 
-```powershell
-git checkout -b teste-segredo
-$t = "123456789:A" + (-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 34 | ForEach-Object {[char]$_}))
-"TELEGRAM_BOT_TOKEN = `"$t`"" | Out-File app/config_teste.py -Encoding utf8
-git add . ; git commit -m "teste: token falso" ; git push -u origin teste-segredo
-```
+### Teste do alerta
 
-Tire print da execução **vermelha** (job Gitleaks falhou). Depois remova e envie de novo:
+O projeto possui o alerta `SemLeiturasDoSensor`, destinado a identificar a ausência de novas leituras.
 
-```powershell
-git rm app/config_teste.py
-git commit -m "remove token falso" ; git push
-```
+Para testar:
 
-Tire print da execução **verde**. Se o Gitleaks continuar acusando o commit antigo, reescreva a branch de teste:
-`git reset --hard HEAD~2` seguido de `git push --force`, e rode de novo.
-(O token é gerado na hora, por isso nenhum segredo de mentira fica gravado nos arquivos do repositório.)
+1. Interrompa temporariamente o envio de leituras.
+2. Aguarde aproximadamente seis minutos, conforme a configuração da regra.
+3. Acesse `http://localhost:9090/alerts`.
+4. Verifique se o alerta aparece como FIRING.
+5. Retome o envio de leituras e acompanhe a resolução do alerta.
 
-**Trivy (configuração insegura):**
+O teste deve ser documentado com uma captura de tela quando executado.
 
-```powershell
-git checkout main
-git checkout -b teste-trivy
-```
+## 7. Demonstração do pipeline de segurança
 
-No `Dockerfile`, coloque `#` na frente da linha `USER appuser` e envie. O Trivy acusa "Image user should not be root"
-(execução **vermelha**). Descomente a linha, envie de novo e tire o print da execução **verde**.
+O projeto utiliza Gitleaks, Semgrep e Trivy para verificar problemas de segurança durante a integração e publicação.
+
+As execuções do GitHub Actions permitem demonstrar o bloqueio de problemas identificados e a aprovação após as correções.
+
+### Gitleaks
+
+O Gitleaks verifica a presença de possíveis segredos no código e no histórico do repositório.
+
+A evidência de execução pode ser obtida na aba Actions, mostrando o resultado do job `gitleaks`.
+
+Não utilize credenciais reais para simular vazamentos. Caso seja necessário realizar um teste controlado, utilize apenas dados sintéticos e uma branch temporária.
+
+### Semgrep
+
+O Semgrep realiza análise estática do código, utilizando as regras:
+
+- `p/python`
+- `p/dockerfile`
+
+O job é considerado aprovado quando não são encontrados problemas que bloqueiem a execução.
+
+### Trivy
+
+O Trivy realiza duas verificações:
+
+- Vulnerabilidades HIGH e CRITICAL na imagem Docker, desconsiderando vulnerabilidades sem correção disponível.
+- Problemas de configuração no Dockerfile e nos arquivos Terraform.
+
+As execuções do pipeline permitem demonstrar o bloqueio por vulnerabilidades e a aprovação após os ajustes necessários.
 
 ## 8. Checklist de evidências para o PDF
 
-- [ ] `docker compose up` rodando (print)
-- [ ] `terraform apply` concluído e URL pública funcionando (prints)
-- [ ] Pipeline verde completo, mais as execuções vermelha e corrigida do Gitleaks e do Trivy
-- [ ] Dashboard do Grafana com os 4 sinais e o alerta em FIRING (prints)
-- [ ] Diagrama, matriz de responsabilidade e onde ficam os dados pessoais (`docs/ARQUITETURA.md`)
-- [ ] Estimativa de custo (print da calculadora da Azure)
-- [ ] Nomes completos e RMs de todos, links clicáveis do repositório e da URL do MVP
-- [ ] Um único PDF enviado por uma pessoa da equipe no portal da disciplina até 19/11, 23h55
+Antes da entrega, reunir as seguintes evidências:
+
+- [ ] Docker Compose executando os serviços.
+- [ ] API local respondendo ao endpoint `/saude`.
+- [ ] Infraestrutura provisionada na Azure.
+- [ ] URL pública da API funcionando.
+- [ ] Pipeline CI/CD com execução aprovada.
+- [ ] Evidência de execução bloqueada por verificação de segurança.
+- [ ] Evidência de execução corrigida e aprovada.
+- [ ] Prometheus monitorando os alvos.
+- [ ] Dashboard Grafana com os quatro sinais de monitoramento.
+- [ ] Alerta `SemLeiturasDoSensor` em estado FIRING.
+- [ ] Diagrama de arquitetura e matriz de responsabilidade.
+- [ ] Documentação sobre a localização dos dados e LGPD.
+- [ ] Estimativa de custos da infraestrutura Azure.
+- [ ] Nomes completos e RMs dos integrantes.
+- [ ] Links do repositório e da API pública.
+
+## 9. Entrega final
+
+A documentação, as evidências e os resultados do projeto devem ser reunidos em um único arquivo PDF.
+
+A entrega deverá ser realizada por uma pessoa da equipe no portal da disciplina até:
+
+**19/11/2026, às 23h55.**
+
+Repositório do projeto:
+
+https://github.com/Matos-Ricardo/encosta-viva
+
+API publicada:
+
+https://encosta-api.salmonglacier-42a3ced4.brazilsouth.azurecontainerapps.io

@@ -1,8 +1,8 @@
 {
-  "title": "Encosta Viva - 4 sinais de ouro",
+  "title": "Encosta Viva - Monitoramento",
   "uid": "encosta-4-sinais",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "10s",
   "time": {
     "from": "now-30m",
@@ -12,13 +12,7 @@
     {
       "id": 1,
       "type": "timeseries",
-      "title": "1. Lat\u00eancia p95 (segundos)",
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 12,
-        "h": 8
-      },
+      "title": "Latência p95",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -26,21 +20,17 @@
       "targets": [
         {
           "refId": "A",
-          "legendFormat": "p95",
-          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_seconds_bucket[5m])))"
+          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_highr_seconds_bucket[5m])))",
+          "legendFormat": "{{job}}",
+          "format": "time_series"
         }
-      ]
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
     },
     {
       "id": 2,
       "type": "timeseries",
-      "title": "2. Tr\u00e1fego (requisi\u00e7\u00f5es/min e leituras do sensor/min)",
-      "gridPos": {
-        "x": 12,
-        "y": 0,
-        "w": 12,
-        "h": 8
-      },
+      "title": "Tráfego - requisições por minuto",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -48,30 +38,29 @@
       "targets": [
         {
           "refId": "A",
-          "legendFormat": "requisi\u00e7\u00f5es/min {{job}}",
-          "expr": "sum by (job) (rate(http_requests_total[1m])) * 60"
-        },
-        {
-          "refId": "B",
-          "legendFormat": "leituras/min {{job}}",
-          "expr": "sum by (job) (rate(leituras_total[1m])) * 60"
+          "expr": "sum by (job) (rate(http_requests_total[1m])) * 60",
+          "legendFormat": "{{job}}",
+          "format": "time_series"
         }
-      ]
+      ],
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
     },
     {
       "id": 3,
       "type": "timeseries",
-      "title": "3. Erros (taxa de respostas 5xx)",
-      "gridPos": {
-        "x": 0,
-        "y": 8,
-        "w": 12,
-        "h": 8
-      },
+      "title": "Taxa de erros 5xx",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (job) (rate(http_requests_total{status=\"5xx\"}[5m])) or sum by (job) (rate(http_requests_total[5m])) * 0) / sum by (job) (rate(http_requests_total[5m]))",
+          "legendFormat": "{{job}}",
+          "format": "time_series"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
@@ -79,24 +68,12 @@
         },
         "overrides": []
       },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "5xx {{job}}",
-          "expr": "(sum by (job) (rate(http_requests_total{status=\"5xx\"}[5m])) or sum by (job) (rate(http_requests_total[5m])) * 0) / sum by (job) (rate(http_requests_total[5m]))"
-        }
-      ]
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
     },
     {
       "id": 4,
       "type": "timeseries",
-      "title": "4. Satura\u00e7\u00e3o (CPU em cores e mem\u00f3ria)",
-      "gridPos": {
-        "x": 12,
-        "y": 8,
-        "w": 12,
-        "h": 8
-      },
+      "title": "Saturação - CPU e memória",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -104,15 +81,18 @@
       "targets": [
         {
           "refId": "A",
-          "legendFormat": "CPU (cores) {{job}}",
-          "expr": "rate(process_cpu_seconds_total[1m])"
+          "expr": "rate(process_cpu_seconds_total[1m])",
+          "legendFormat": "CPU {{job}}",
+          "format": "time_series"
         },
         {
           "refId": "B",
-          "legendFormat": "mem\u00f3ria (bytes) {{job}}",
-          "expr": "process_resident_memory_bytes"
+          "expr": "process_resident_memory_bytes",
+          "legendFormat": "Memória {{job}}",
+          "format": "time_series"
         }
-      ]
+      ],
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
     }
   ]
 }
