@@ -188,7 +188,11 @@ O workspace do Log Analytics utiliza SKU `PerGB2018`, retenção de 30 dias e n�
 
 Na consulta dos últimos 30 dias, foram identificados **0,0001 GB de dados faturáveis ingeridos** (aproximadamente 0,1 MB).
 
-O custo total depende também do consumo de CPU, memória, tráfego e execução do Azure Container Apps. A estimativa financeira deve considerar os preços vigentes na região, utilizando a [calculadora oficial da Azure](https://azure.microsoft.com/pricing/calculator/).
+Na consulta ao Cost Analysis do Azure em **10/11/2026**, o custo real acumulado de novembro era de **R$ 0,84**, distribuído entre Azure Container Apps (R$ 0,68), Azure Monitor (R$ 0,16) e Log Analytics (R$ 0,00).
+
+A extrapolação linear desse consumo para 30 dias resulta em aproximadamente **R$ 2,52**. Trata-se de uma estimativa própria, não de uma previsão oficial do Azure. O custo efetivo pode variar conforme o consumo dos recursos e os preços regionais.
+
+Para simulações, consulte a [calculadora oficial da Azure](https://azure.microsoft.com/pricing/calculator/).
 
 ## Links do projeto
 

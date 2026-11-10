@@ -85,4 +85,19 @@ Na consulta de utilização do Log Analytics, referente aos últimos 30 dias, fo
 
 O volume observado de ingestão é muito baixo. Entretanto, o custo total mensal depende também da execução do Azure Container Apps, do consumo de recursos, do tráfego e dos preços vigentes na região.
 
-Os valores financeiros devem ser complementados com a estimativa da calculadora oficial da Azure: https://azure.microsoft.com/pricing/calculator/
+### Custo real observado e estimativa
+
+Na consulta ao Cost Analysis do Azure em **10/11/2026**, o custo real acumulado de novembro era de **R$ 0,84**:
+
+| Serviço | Custo real |
+|---|---:|
+| Azure Container Apps | R$ 0,68 |
+| Azure Monitor | R$ 0,16 |
+| Log Analytics | R$ 0,00 |
+| **Total** | **R$ 0,84** |
+
+O portal apresentava o período de 01/11/2026 a 30/11/2026, mas o valor representa o acumulado disponível na data da consulta, não o fechamento do mês.
+
+Como referência, a extrapolação linear para 30 dias é de aproximadamente **R$ 2,52**. Essa projeção é uma estimativa própria, não uma previsão oficial do Azure. O custo efetivo pode variar conforme o uso dos recursos e os preços regionais.
+
+Calculadora oficial: https://azure.microsoft.com/pricing/calculator/
