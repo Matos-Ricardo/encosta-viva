@@ -63,6 +63,14 @@ Os registros de infraestrutura e monitoramento devem possuir acesso restrito e p
 
 O Encosta Viva é um MVP acadêmico e não substitui os procedimentos oficiais da Defesa Civil.
 
+## Alertas e limitações de validação
+
+A infraestrutura possui uma regra do Azure Monitor chamada `alerta-encosta-erros-500`, habilitada para identificar respostas HTTP 500 nos logs da aplicação, com frequência de avaliação de cinco minutos e integração ao Action Group `ag-encosta-alertas`.
+
+Durante a validação, não foi observado disparo real dessa regra. O teste nativo de notificações do Action Group também não pôde ser concluído devido à restrição da assinatura Azure for Students (`Free subscription not supported`).
+
+Assim, a configuração do alerta está implementada, mas o disparo e o recebimento efetivo da notificação não foram comprovados. Essa limitação deve ser considerada na avaliação da observabilidade do MVP.
+
 ## Estimativa de custo mensal
 
 A infraestrutura utiliza recursos da Microsoft Azure na região `brazilsouth`.

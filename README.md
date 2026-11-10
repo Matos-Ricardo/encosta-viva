@@ -144,7 +144,9 @@ As métricas acompanhadas incluem os quatro sinais de ouro:
 
 O Prometheus coleta métricas da API local e da aplicação publicada no Azure.
 
-O projeto também possui regras de alerta para ausência de leituras e aumento de respostas HTTP 5xx.
+O Azure Monitor possui uma regra de alerta para identificar respostas HTTP 500 nos logs da aplicação, com avaliação a cada cinco minutos e envio configurado por meio de um Action Group.
+
+**Limitação do teste:** a regra foi criada e habilitada, mas não houve comprovação de disparo real durante a validação. O teste nativo de notificações do Action Group foi bloqueado pela assinatura Azure for Students (mensagem `Free subscription not supported`). Portanto, o envio de notificações permanece configurado, mas não foi validado por um disparo efetivo.
 
 ## Privacidade e LGPD
 
