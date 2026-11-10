@@ -148,15 +148,25 @@ O projeto também possui regras de alerta para ausência de leituras e aumento d
 
 ## Privacidade e LGPD
 
-O projeto deve observar os princípios da Lei Geral de Proteção de Dados (LGPD).
+A versão atual do Encosta Viva não possui cadastro de moradores nem solicita diretamente dados pessoais, como nome, CPF, telefone ou endereço.
 
-- Coletar somente informações necessárias para o monitoramento.
-- Evitar o armazenamento de dados pessoais desnecessários.
-- Proteger credenciais e informações de acesso.
-- Restringir o acesso aos recursos de infraestrutura.
-- Definir políticas de retenção e tratamento dos registros.
+A API recebe e processa os seguintes dados:
+- `setor_id`: identificação do setor monitorado;
+- `umidade_pct`: percentual de umidade do solo;
+- `nivel`: classificação da situação do setor;
+- `recebido_em`: horário de recebimento da leitura.
 
-A aplicação não deve ser utilizada como substituta dos procedimentos oficiais da Defesa Civil.
+As últimas leituras são mantidas em memória durante a execução da aplicação, sem persistência em banco de dados nesta versão do MVP.
+
+O identificador do setor não deve ser associado publicamente a uma pessoa identificável. Caso essa associação seja necessária em versões futuras, deverão ser adotadas medidas adicionais de proteção, controle de acesso e minimização de dados.
+
+As credenciais de acesso são fornecidas por variáveis de ambiente, e o envio das leituras é protegido por chave de API.
+
+Os registros de infraestrutura e monitoramento devem ter acesso restrito e políticas de retenção adequadas.
+
+O projeto deve observar os princípios da Lei Geral de Proteção de Dados (LGPD), especialmente finalidade, necessidade, segurança e prevenção.
+
+**Limitação:** o Encosta Viva é um MVP acadêmico e não substitui os procedimentos oficiais da Defesa Civil.
 
 ## Responsabilidade compartilhada
 
@@ -172,11 +182,13 @@ A aplicação não deve ser utilizada como substituta dos procedimentos oficiais
 
 ## Estimativa de custos
 
-A infraestrutura utiliza serviços Azure, incluindo Azure Container Apps e Log Analytics.
+A infraestrutura utiliza serviços Azure na região `brazilsouth`, incluindo Azure Container Apps e Log Analytics.
 
-Os custos dependem do consumo de CPU, memória, armazenamento, registros e tráfego.
+O workspace do Log Analytics utiliza SKU `PerGB2018`, retenção de 30 dias e não possui limite diário de ingestão configurado.
 
-A estimativa financeira detalhada deve considerar a configuração efetivamente provisionada, a região `brazilsouth` e os preços vigentes no momento da entrega.
+Na consulta dos últimos 30 dias, foram identificados **0,0001 GB de dados faturáveis ingeridos** (aproximadamente 0,1 MB).
+
+O custo total depende também do consumo de CPU, memória, tráfego e execução do Azure Container Apps. A estimativa financeira deve considerar os preços vigentes na região, utilizando a [calculadora oficial da Azure](https://azure.microsoft.com/pricing/calculator/).
 
 ## Links do projeto
 

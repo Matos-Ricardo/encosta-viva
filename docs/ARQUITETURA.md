@@ -45,17 +45,44 @@ flowchart LR
 
 ## Onde ficam os dados pessoais
 
-Nesta versão a API **não coleta nem guarda dado pessoal**: apenas `setor_id`, `umidade_pct` e `nivel`, em memória.
-Se o grupo adicionar cadastro de moradores, ele deve ficar só no banco (Postgres), com identificador em hash
-(SHA-256 + salt), sem nome, telefone ou endereço em claro, e fotos sem EXIF.
+A versão atual da API não possui cadastro de moradores nem solicita diretamente nome, CPF, telefone ou endereço.
+
+A aplicação recebe:
+- `setor_id`: identificação do setor monitorado;
+- `umidade_pct`: percentual de umidade do solo;
+- `nivel`: classificação da situação;
+- `recebido_em`: horário de recebimento da leitura.
+
+As últimas leituras ficam armazenadas em memória na variável `ULTIMA`, sem persistência em banco de dados nesta versão do MVP.
+
+O identificador do setor não deve permitir a identificação pública de moradores. Caso seja associado a uma pessoa identificável em versões futuras, deverão ser adotadas medidas adicionais de proteção e controle de acesso.
+
+As credenciais são configuradas por variáveis de ambiente, e o recebimento das leituras exige chave de API.
+
+Os registros de infraestrutura e monitoramento devem possuir acesso restrito e políticas de retenção adequadas, respeitando os princípios de segurança, necessidade e prevenção da LGPD.
+
+O Encosta Viva é um MVP acadêmico e não substitui os procedimentos oficiais da Defesa Civil.
 
 ## Estimativa de custo mensal
 
-Preencher com a calculadora oficial (https://azure.microsoft.com/pricing/calculator/) e anexar o print no PDF:
+A infraestrutura utiliza recursos da Microsoft Azure na região `brazilsouth`.
 
-| Recurso | Configuração usada | Custo estimado |
+| Recurso | Configuração | Observação |
 |---|---|---|
-| Azure Container Apps | 0,25 vCPU, 0,5 GiB, 1 réplica 24x7 | (preencher) |
-| Log Analytics | baixa ingestão, retenção de 30 dias | (preencher) |
-| GHCR, GitHub Actions | repositório público | sem custo |
-| **Total/mês** | | (preencher) |
+| Azure Container Apps | 0,25 vCPU, 0,5 GiB, mínimo de 1 réplica | Plano Consumption |
+| Log Analytics | SKU PerGB2018 | Cobrança conforme ingestão |
+| Retenção de logs | 30 dias | Configuração do workspace |
+| Limite diário de ingestão | Sem limite configurado | `dailyQuotaGb = -1` |
+| GitHub Actions e GHCR | Repositório público | Utilização conforme limites gratuitos aplicáveis |
+
+### Consumo observado
+
+Na consulta de utilização do Log Analytics, referente aos últimos 30 dias, foi identificado:
+
+- Dados faturáveis ingeridos: **0,0001 GB** (aproximadamente 0,1 MB).
+- Retenção configurada: **30 dias**.
+- SKU: **PerGB2018**.
+
+O volume observado de ingestão é muito baixo. Entretanto, o custo total mensal depende também da execução do Azure Container Apps, do consumo de recursos, do tráfego e dos preços vigentes na região.
+
+Os valores financeiros devem ser complementados com a estimativa da calculadora oficial da Azure: https://azure.microsoft.com/pricing/calculator/
